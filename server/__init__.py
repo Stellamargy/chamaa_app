@@ -1,6 +1,7 @@
 from flask import Flask
 from server.models import db
 from .config import Config 
+from server.routes.auth import auth_bp
 
 def create_app():
 
@@ -12,6 +13,9 @@ def create_app():
 
     # initialize extensions 
     db.init_app(app)
+
+    #register bluerints 
+    app.register_blueprint(auth_bp, url_prefix="/api")
 
     # a simple page that says hello
     @app.route('/hello')
