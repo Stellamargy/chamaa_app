@@ -10,7 +10,6 @@ python-dotenv = "*"
 psycopg2 = "*"
 marshmallow-sqlalchemy = "*"
 marshmallow = "*"
-flask-restful = "*"
 
 [dev-packages]
 
