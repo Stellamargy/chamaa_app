@@ -4,6 +4,7 @@ from server.utilis.api_response import ApiResponse
 from server.models import db  
 from flask import Blueprint, request
 from marshmallow import ValidationError
+from server.exceptions import ConflictError
 
 auth_bp = Blueprint("auth", __name__)
 

@@ -1,6 +1,7 @@
 from server.schema.userschema import UserSchema
 from server.exceptions import ConflictError
 from marshmallow import ValidationError
+# from server.repositories.user_repository import UserRepository
 class UserRegistration:
     def __init__(self,userrepository):
         #be able to access the object as an attribute . 
@@ -36,7 +37,7 @@ class UserRegistration:
 #   "first_name": "Brian",
 #   "last_name": "Otieno",
 #   "password": "pa55word",
-#   "email_address": "brian.otieno@gmail.com"
+#   "email_address": "brian.Otieno@gmail.com   "
 # }
 
 # user_registration =UserRegistration()
