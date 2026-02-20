@@ -11,12 +11,15 @@ class UserRegistration:
         # Use schema to validate user input / data
         user_schema=UserSchema() 
         valid_user_data=user_schema.load(user_data)
+        
         #Check if user is unique  
         existing_user= self.userrepository.get_user_by_email(valid_user_data["email_address"])
         # If they exist 
         if existing_user:
             raise ConflictError("Email already exist")
-         #If user is unique - persist them 
+
+         #If user is unique - persist them (add them to db )
+       
         user=self.userrepository.create_user(valid_user_data)
 
         return user 
