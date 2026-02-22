@@ -10,6 +10,7 @@ python-dotenv = "*"
 psycopg2 = "*"
 marshmallow-sqlalchemy = "*"
 marshmallow = "*"
+pyjwt = "*"
 
 [dev-packages]
 
