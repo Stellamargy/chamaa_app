@@ -1,17 +1,13 @@
-from server.repositories.user_repository import UserRepository
-from server.services.user_registration import UserRegistration
+from server.dependecies import get_user_registration_service
 from server.utilis.api_response import ApiResponse
-from server.models import db  
 from flask import Blueprint, request
 from marshmallow import ValidationError
 from server.exceptions import ConflictError
 
 auth_bp = Blueprint("auth", __name__)
 
-# Create dependencies 
-user_repository=UserRepository(db.session)
-user_registration_service = UserRegistration(user_repository)
-api_response=ApiResponse()
+
+
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
@@ -24,10 +20,10 @@ def register():
                 message="No data provided",
                 status_code=400
             )
+        user_registration_service=get_user_registration_service()
+        user = user_registration_service.create_user_account(user_input)
 
-        user = user_registration_service.onboard_user(user_input)
-
-        return api_response.success(
+        return ApiResponse.success(
             data={
                 "id": user.id,
                 "email_address": user.email_address,
@@ -39,21 +35,22 @@ def register():
         )
 
     except ValidationError as e:
-        return api_response.error(
+        return ApiResponse.error(
             message="Validation failed",
             errors=e.messages,
             status_code=400
         )
 
     except ConflictError as e:
-        return api_response.error(
+        return ApiResponse.error(
             message=str(e),
             status_code=409
         )
 
     except Exception as e:
-        print(f"Unexpected error: {e}")
-        return api_response.error(
+        
+        return ApiResponse.error(
+            errors=str(e),
             message="Internal Server Error",
             status_code=500
         )

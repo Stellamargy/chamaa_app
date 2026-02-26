@@ -1,6 +1,7 @@
 from flask import jsonify
 class ApiResponse:
-    def success(self,data=None, message=None, status_code=200):
+    @staticmethod
+    def success(data=None, message=None, status_code=200):
         response = {
             "success": True,
             "message": message,
@@ -8,8 +9,8 @@ class ApiResponse:
             "errors": None
         }
         return jsonify(response), status_code
-
-    def error(self, message=None, errors=None, status_code=400):
+    @staticmethod
+    def error( message=None, errors=None, status_code=400):
         response = {
             "success": False,
             "message": message,

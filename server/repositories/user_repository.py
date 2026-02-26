@@ -2,31 +2,25 @@
 from server.models.user import User
  
 class UserRepository:
+    def __init__(self, db_session):
+        self.db_session = db_session
 
-    def __init__(self, session):
-        self.session = session
-    # Checks if user is unique
-    #Returns None if unique 
-    #Returns user if not unique(user exist)
+    #return None / existing user with the provided email
     def get_user_by_email(self, email_address):
-        return self.session.query(User).filter_by(
+        return self.db_session.query(User).filter_by(
             email_address=email_address
         ).first()
-    #Instatiate a User instance from user input 
-    #Persist the user instance attributes in db 
-    def create_user(self, user_data):
+
+    #create a user record (add user) 
+    def add_user(self, user_data):
         user_password = user_data.pop("password")
         user = User(**user_data)
+        #use password setter to hash password
         user.password = user_password
-
-        try:
-            self.session.add(user)
-            self.session.flush()  
-            self.session.commit()
-            return user
-        except Exception as e:
-            self.session.rollback()
-            raise  # Re-raises the same exception
+        self.db_session.add(user)
+        self.db_session.flush()
+        return user
+        
         
 
 
