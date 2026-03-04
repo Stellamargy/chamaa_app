@@ -1,34 +1,40 @@
 import jwt
 from datetime import datetime, timedelta, timezone
-from server.config import Config
 
 
 class JwtService:
-    def __init__(self, secret_key:Config, algorithm:str="HS256", default_exp_minutes:int=15):
-        self.secret_key = Config.EMAIL_VERIFICATION_KEY
+    def __init__(self, secret_key: str, algorithm: str = "HS256"):
+        self.secret_key = secret_key
         self.algorithm = algorithm
-        self.default_exp_minutes = default_exp_minutes
-    # Generates and return JWT token 
-    def generate_token(self, payload: dict, expires_in: int | None = None):
-        expiry = datetime.now(timezone.utc) + timedelta(
-            minutes=expires_in or self.default_exp_minutes
-        )
 
+    def _generate(self, payload: dict, expires_minutes: int) -> str:
+        # Generic JWT generator used internally by all token types.
+        now = datetime.now(timezone.utc)
         payload_copy = payload.copy()
-        payload_copy["exp"] = expiry
+        payload_copy.update({
+            "iat": now,
+            "exp": now + timedelta(minutes=expires_minutes)
+        })
+        return jwt.encode(payload_copy, self.secret_key, algorithm=self.algorithm)
 
-        token = jwt.encode(
-            payload_copy,
-            self.secret_key,
-            algorithm=self.algorithm
-        )
+    def create_access_token(
+        self,
+        user_id: int,
+        role: str,
+        is_verified: bool = False,
+        is_active: bool = True,
+        expires_minutes: int = 60
+    ) -> str:
+        
+        # Creates an access token.
+        # `is_verified` and `is_active` are UI/UX hints only.
+        
+        payload = {
+            "sub": user_id,
+            "type": "access",
+            "is_verified": is_verified,  # UI hint only
+            "is_active": is_active       # UI hint only
+        }
+        return self._generate(payload, expires_minutes)
 
-        return token
-
- 
-
-
-
-
-
-
+    
