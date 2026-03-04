@@ -58,6 +58,6 @@ class UserSchema(SQLAlchemySchema):
         pattern = r"^\+254(7|1)\d{8}$"
         if not re.match(pattern, value):
             raise ValidationError(
-                "Phone number must be a valid Kenyan number starting with +25 and 12 digits in total"
+                """Phone number must be a valid Kenyan phone number starting with +254 and 12 digits in total"""
             )            
 

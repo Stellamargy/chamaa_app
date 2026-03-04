@@ -1,34 +1,43 @@
-from server.dependecies import get_user_registration_service
 from server.utilis.api_response import ApiResponse
 from flask import Blueprint, request
 from marshmallow import ValidationError
 from server.exceptions import ConflictError
+from server.models import db
+from server.repositories.user_repository import UserRepository
+from server.services.auth_service import AuthService
+import traceback
 
 auth_bp = Blueprint("auth", __name__)
 
 
 
 
-@auth_bp.route("/register", methods=["POST"])
-def register():
+@auth_bp.route("/sign_up", methods=["POST"])
+def sign_up():
+    # Get and parse user_input
+    user_input = request.get_json()
 
-    try:
-        user_input = request.get_json()
-
-        if not user_input:
+    if not user_input:
             return ApiResponse.error(
                 message="No data provided",
                 status_code=400
             )
-        user_registration_service=get_user_registration_service()
-        user = user_registration_service.create_user_account(user_input)
+    # Create user repository object 
+    user_repository=UserRepository(db.session)
+    #create auth service object 
+    auth_service=AuthService(userrepository=user_repository)
+    try:
+        registration_results= auth_service.register_user(user_input)
+        user=registration_results["user"]
+        access_token=registration_results["access_token"]
 
         return ApiResponse.success(
             data={
                 "id": user.id,
                 "email_address": user.email_address,
                 "first_name": user.first_name,
-                "last_name": user.last_name
+                "last_name": user.last_name,
+                "access_token":access_token
             },
             message="User registered successfully",
             status_code=201
@@ -48,9 +57,11 @@ def register():
         )
 
     except Exception as e:
-        
+        traceback.print_exc()
         return ApiResponse.error(
-            errors=str(e),
-            message="Internal Server Error",
+            errors=str(e.orig),
+            message="User registration failed",
             status_code=500
         )
+
+

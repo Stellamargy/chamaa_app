@@ -20,9 +20,9 @@ class JwtService:
     def create_access_token(
         self,
         user_id: int,
-        role: str,
-        is_verified: bool = False,
-        is_active: bool = True,
+        # role: str,
+        is_verified: bool,
+        is_active: bool ,
         expires_minutes: int = 60
     ) -> str:
         
