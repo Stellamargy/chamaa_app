@@ -1,7 +1,7 @@
 from server.utilis.api_response import ApiResponse
 from flask import Blueprint, request
 from marshmallow import ValidationError
-from server.exceptions import ConflictError
+from server.exceptions import ConflictError,AuthenticationError
 from server.models import db
 from server.repositories.user_repository import UserRepository
 from server.services.auth_service import AuthService
@@ -65,3 +65,55 @@ def sign_up():
         )
 
 
+@auth_bp.route("/sign_in", methods=["POST"])
+def sign_in():
+    # Get login data
+    login_input = request.get_json()
+
+    if not login_input:
+        return ApiResponse.error(
+            message="No data provided",
+            status_code=400
+        )
+
+    # Initialize dependencies
+    user_repository = UserRepository(db.session)
+    auth_service = AuthService(userrepository=user_repository)
+
+    try:
+        login_results = auth_service.login_user(login_input)
+
+        user = login_results["user"]
+        access_token = login_results["access_token"]
+
+        return ApiResponse.success(
+            data={
+                "id": user.id,
+                "email_address": user.email_address,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "access_token": access_token
+            },
+            message="Login successful",
+            status_code=200
+        )
+
+    except ValidationError as e:
+        return ApiResponse.error(
+            message="Validation failed",
+            errors=e.messages,
+            status_code=400
+        )
+
+    except AuthenticationError as e:
+        return ApiResponse.error(
+            message=str(e),
+            status_code=401
+        )
+
+    except Exception as e:
+        traceback.print_exc()
+        return ApiResponse.error(
+            message="Login failed",
+            status_code=500
+        )

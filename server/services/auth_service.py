@@ -1,6 +1,6 @@
-from server.schema import user_schema
+from server.schema import user_schema,login_schema
 from sqlalchemy.exc import IntegrityError
-from server.exceptions import ConflictError
+from server.exceptions import ConflictError,AuthenticationError
 from .jwt_service import JwtService
 from server.config import Config
 class AuthService:
@@ -36,5 +36,39 @@ class AuthService:
             "user":user,
             "access_token":access_token
         }
+
+    #Logs in a user 
+    def login_user(self,login_credentials):
+        #Validate login credentials
+        valid_login_credentials=login_schema.load(login_credentials)
+        #If valid credentials use email_address in credentials to fetch user from db
+        existing_user=self.userrepository.get_user_by_email(
+            valid_login_credentials["email_address"]
+            )
+        if not existing_user or not existing_user.check_password(
+            valid_login_credentials["password"]
+            ):
+            raise AuthenticationError('Invalid credentials')
+        
+        #If credentials are valid - generate  access_token 
+        jwt_service=JwtService(Config.ACCESS_TOKEN_SECRET)
+        access_token=jwt_service.create_access_token(
+            user_id=existing_user.id,
+            is_verified=existing_user.is_verified,
+            is_active=existing_user.is_active
+            )
+        return {
+            "access_token":access_token,
+            "user":existing_user
+        }
+
+            
+            
+
+          
+
+
+            
+
         
     
