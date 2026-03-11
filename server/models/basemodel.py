@@ -8,7 +8,7 @@ class BaseModel(db.Model):
     created_at: Mapped[datetime]=mapped_column(DateTime,nullable=False,server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, 
-        nullable=True,  # Allow NULL
+        nullable=True,  # Allow NULL at insertion
         onupdate=func.now()  # Only set when actually updated
     )
    

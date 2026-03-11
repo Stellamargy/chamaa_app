@@ -9,9 +9,13 @@ class UserRepository:
         return self.db_session.query(User).filter_by(
             email_address=email_address
         ).first()
+    #If user_id exist return user if not None
+    def get_user_by_id(self,user_id):
+        return self.db_session.query(User).filter_by(
+            id=user_id).first()
 
     #create a user record (add user) 
-    def create_user(self, user_data):
+    def save_user(self, user_data):
         user_password = user_data.pop("password")
         user = User(**user_data)
         #use password setter to hash password

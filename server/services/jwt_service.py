@@ -1,40 +1,43 @@
 import jwt
 from datetime import datetime, timedelta, timezone
-
-
+from flask_jwt_extended import create_access_token
+from flask import current_app
 class JwtService:
-    def __init__(self, secret_key: str, algorithm: str = "HS256"):
-        self.secret_key = secret_key
-        self.algorithm = algorithm
+    # Create a JWT access token for the given user.
+    @staticmethod
+    def generate_access_token(user):
+        try:
+            return create_access_token(
+                identity=str(user.id),
+                additional_claims={
+                    "email_verified": user.is_verified,
+                    "user_active": user.is_active
+                }
+            )
 
-    def _generate(self, payload: dict, expires_minutes: int) -> str:
-        # Generic JWT generator used internally by all token types.
-        now = datetime.now(timezone.utc)
-        payload_copy = payload.copy()
-        payload_copy.update({
-            "iat": now,
-            "exp": now + timedelta(minutes=expires_minutes)
-        })
-        return jwt.encode(payload_copy, self.secret_key, algorithm=self.algorithm)
+        except Exception as e:
+            # preserve original error for logging
+            raise RuntimeError("Failed to generate access token") from e
 
-    def create_access_token(
-        self,
-        user_id: int,
-        # role: str,
-        is_verified: bool,
-        is_active: bool ,
-        expires_minutes: int = 60
-    ) -> str:
-        
-        # Creates an access token.
-        # `is_verified` and `is_active` are UI/UX hints only.
-        
+    # Create email verification token    
+    @staticmethod
+    def create_email_verification_token(user_id):
+
         payload = {
-            "sub": user_id,
-            "type": "access",
-            "is_verified": is_verified,  # UI hint only
-            "is_active": is_active       # UI hint only
+            "sub": str(user_id),
+            "exp": datetime.now(tz=timezone.utc) + timedelta(hours=24),
+            "iat":datetime.now(tz=timezone.utc),
+            "type": "email_verification"
         }
-        return self._generate(payload, expires_minutes)
 
-    
+        try:
+            token = jwt.encode(
+            payload,
+            current_app.config["EMAIL_VERIFICATION_SECRET"],
+            algorithm="HS256"
+            )
+            return token
+        except Exception as e:
+            raise RuntimeError("Failed to generate access token") from e
+
+        

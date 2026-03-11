@@ -14,12 +14,15 @@ class User(BaseModel):
     is_verified:Mapped[bool]=mapped_column(Boolean,nullable=False,default=False)
     is_active:Mapped[bool]=mapped_column(Boolean,nullable=False,default=True)
 
-    #getter for _password_hash
+    #getter for _password_hash (internal attribute)
     @property
     def password(self):
         return self._password_hash
     #setter for _password_hash - hashes plain text password for security 
     @password.setter
-    def password(self, plain_text):
-        self._password_hash = generate_password_hash(plain_text)
+    def password(self, plain_password):
+        self._password_hash = generate_password_hash(plain_password)
+    #Compare password hashes  
+    def check_password(self,plain_password):
+        return check_password_hash(self.password,plain_password)
     

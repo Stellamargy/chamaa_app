@@ -14,5 +14,9 @@ class Config:
     SMTP_FROM_ADDRESS=os.getenv("SMTP_FROM_ADDRESS") 
     SMTP_HOST=os.getenv("SMTP_HOST","smtp.gmail.com") 
     SMTP_PORT=int(os.getenv("SMTP_PORT",587) )
-    EMAIL_VERIFICATION_KEY=os.getenv("EMAIL_VERIFICATION_SECRETS")
-    ACCESS_TOKEN_SECRET=os.getenv("ACCESS_TOKEN_SECRET")
+    EMAIL_VERIFICATION_SECRET=os.getenv("EMAIL_VERIFICATION_SECRET")
+    # Something weird is happening here 
+    JWT_SECRET_KEY=os.getenv("JWT_SECRET_KEY")
+    
+
+   
