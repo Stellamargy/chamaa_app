@@ -15,7 +15,7 @@ class EmailService:
 
     def generate_verification_email(self, user, verify_email_token):
         verification_link = (
-            f"http://127.0.0.1:5000/verify_email?token={verify_email_token}"
+            f"http://127.0.0.1:5000/auth/verify_email?token={verify_email_token}"
         )
 
         html_body = render_template(
