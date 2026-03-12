@@ -1,4 +1,5 @@
 import jwt
+from jwt import ExpiredSignatureError
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import create_access_token
 from flask import current_app
@@ -41,3 +42,23 @@ class JwtService:
             return token
         except Exception as e:
             raise RuntimeError("Failed to generate access token") from e
+    # Checks email verification token validility   
+    @staticmethod
+    def decode_email_verification_token(token):
+        try:
+            payload = jwt.decode(
+                token,
+                current_app.config["EMAIL_VERIFICATION_SECRET"],
+                algorithms=["HS256"],
+            )
+
+            if payload.get("type") != "email_verification":
+                raise ValueError("Invalid token type")
+
+            return payload
+
+        except jwt.ExpiredSignatureError as e:
+            raise AuthenticationError("Verification link expired") from e
+
+        except jwt.InvalidTokenError as e:
+            raise AuthenticationError("Invalid verification token") from e
