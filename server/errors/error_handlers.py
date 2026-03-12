@@ -34,7 +34,7 @@ def register_error_handlers(app):
 
         return ApiResponse.error(message="A server error occurred", status_code=500)
 
-    @app.errorhandler(RuntimeError)
+    @app.errorhandler(Exception)
     def handle_unexpected_error(e):
 
         # log full stacktrace internally
