@@ -76,3 +76,23 @@ def send_verification_email():
     auth_service.send_email_verification_link(user_id)
 
     return ApiResponse.success(message="If the email is valid, a verification link has been sent.")
+
+# verify email
+@auth_bp.route("/verify_email", methods=["GET"])
+def verify_email():
+
+    token = request.args.get("token")
+
+    if not token:
+        return ApiResponse.error(
+            message="Verification token required",
+            status_code=400
+        )
+
+    auth_service = get_auth_service()
+
+    auth_service.verify_email(token)
+
+    return ApiResponse.success(
+        message="Email verified successfully"
+    )
