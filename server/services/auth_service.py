@@ -88,3 +88,29 @@ class AuthService:
             subject="Verify your email",
             html_body=verification_email,
         )
+
+    # Verify user's email address 
+    def verify_email(self, token):
+        #validate email  verification token 
+        payload = self.jwt_service.decode_email_verification_token(token)
+        # Get user id from claim -"sub"
+        user_id = int(payload["sub"])
+        #fetch user from db
+        user = self.user_repository.get_user_by_id(user_id)
+
+        if not user:
+            raise AuthenticationError("Invalid verification token")
+
+        if user.is_verified:
+            raise ConflictError("Email already verified")
+
+        user.is_verified = True
+
+        try:
+            self.user_repository.db_session.commit()
+
+        except SQLAlchemyError as e:
+            self.user_repository.db_session.rollback()
+            raise DatabaseError("Failed to verify email") from e
+
+        return user
