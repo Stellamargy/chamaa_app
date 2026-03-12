@@ -7,27 +7,24 @@ from server.models.user import User
 class UserSchema(SQLAlchemySchema):
     class Meta:
         model = User
-    #Fields to validate
+
+    # Fields to validate
     first_name = fields.String(required=True, allow_none=False)
     last_name = fields.String(required=True, allow_none=False)
     password = fields.String(
-        required=True,
-        allow_none=False,
-        load_only=True,
-        validate=validate.Length(min=6)
+        required=True, allow_none=False, load_only=True, validate=validate.Length(min=6)
     )
 
     email_address = fields.Email(required=True, allow_none=False)
     phone_number = fields.String(required=True, allow_none=False)
 
-    
     @pre_load
     def normalize_email_address(self, user_input, **kwargs):
         if "email_address" in user_input:
             user_input["email_address"] = user_input["email_address"].lower().strip()
         return user_input
 
-    #Custom validations 
+    # Custom validations
     @validates("first_name")
     def validate_first_name(self, value, **kwargs):
         if not value.strip():
@@ -59,5 +56,4 @@ class UserSchema(SQLAlchemySchema):
         if not re.match(pattern, value):
             raise ValidationError(
                 """Phone number must be a valid Kenyan phone number +254XXXXXXXXX"""
-            )            
-
+            )

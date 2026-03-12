@@ -14,12 +14,14 @@ class EmailService:
         self.smtp_password = smtp_password
 
     def generate_verification_email(self, user, verify_email_token):
-        verification_link = f"http://127.0.0.1:5000/verify_email?token={verify_email_token}"
+        verification_link = (
+            f"http://127.0.0.1:5000/verify_email?token={verify_email_token}"
+        )
 
         html_body = render_template(
             "email/verify_email.html",
             first_name=user.first_name,
-            verification_link=verification_link
+            verification_link=verification_link,
         )
 
         return html_body
@@ -38,9 +40,7 @@ class EmailService:
                 server.login(self.smtp_from_address, self.smtp_password)
 
                 failed_recipients = server.sendmail(
-                    self.smtp_from_address,
-                    to,
-                    msg.as_string()
+                    self.smtp_from_address, to, msg.as_string()
                 )
 
         except smtplib.SMTPAuthenticationError as e:
@@ -55,7 +55,11 @@ class EmailService:
                 f"Could not connect to SMTP server at {self.smtp_host}:{self.smtp_port}."
             ) from e
 
-        except (smtplib.SMTPSenderRefused, smtplib.SMTPHeloError, smtplib.SMTPNotSupportedError) as e:
+        except (
+            smtplib.SMTPSenderRefused,
+            smtplib.SMTPHeloError,
+            smtplib.SMTPNotSupportedError,
+        ) as e:
             # Server rejected sender or handshake — configuration issue
             raise EmailConfigurationError(
                 "SMTP configuration error. Check your server settings."
@@ -67,14 +71,13 @@ class EmailService:
 
             raise EmailDeliveryError(
                 "All recipients were refused by the SMTP server.",
-                failed_recipients=refused
+                failed_recipients=refused,
             ) from e
 
         except smtplib.SMTPException as e:
             # Catch-all for remaining SMTP issues
             raise EmailDeliveryError(
-                "Failed to send email.",
-                failed_recipients=[to]
+                "Failed to send email.", failed_recipients=[to]
             ) from e
 
         # sendmail soft-fail:
@@ -83,13 +86,7 @@ class EmailService:
         if failed_recipients:
             raise EmailDeliveryError(
                 "Email was only partially delivered — some recipients failed.",
-                failed_recipients=list(failed_recipients.keys())
+                failed_recipients=list(failed_recipients.keys()),
             )
 
-        return {
-            "success": True,
-            "failed_recipients": []
-        }
-           
-
-        
+        return {"success": True, "failed_recipients": []}

@@ -14,7 +14,7 @@ def get_auth_service():
         smtp_host=Config.SMTP_HOST,
         smtp_port=Config.SMTP_PORT,
         smtp_from_address=Config.SMTP_FROM_ADDRESS,
-        smtp_password=Config.SMTP_PASSWORD
+        smtp_password=Config.SMTP_PASSWORD,
     )
 
     jwt_service = JwtService()
@@ -22,5 +22,5 @@ def get_auth_service():
     return AuthService(
         user_repository=user_repository,
         email_service=email_service,
-        jwt_service=jwt_service
+        jwt_service=jwt_service,
     )

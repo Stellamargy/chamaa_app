@@ -5,8 +5,7 @@ from server.exceptions import (
     AuthenticationError,
     DatabaseError,
     EmailConfigurationError,
-    EmailDeliveryError
-    
+    EmailDeliveryError,
 )
 from server.utilis.api_response import ApiResponse
 
@@ -17,62 +16,44 @@ def register_error_handlers(app):
     def handle_validation_error(e):
 
         return ApiResponse.error(
-            message="Validation failed",
-            errors=e.messages,
-            status_code=400
+            message="Validation failed", errors=e.messages, status_code=400
         )
-
 
     @app.errorhandler(ConflictError)
     def handle_conflict_error(e):
 
-        return ApiResponse.error(
-            message=str(e),
-            status_code=409
-        )
-
+        return ApiResponse.error(message=str(e), status_code=409)
 
     @app.errorhandler(AuthenticationError)
     def handle_auth_error(e):
 
-        return ApiResponse.error(
-            message=str(e),
-            status_code=401
-        )
-
+        return ApiResponse.error(message=str(e), status_code=401)
 
     @app.errorhandler(DatabaseError)
     def handle_database_error(e):
 
-        return ApiResponse.error(
-            message="A database error occurred",
-            status_code=500
-        )
-
+        return ApiResponse.error(message="A server error occurred", status_code=500)
 
     @app.errorhandler(RuntimeError)
     def handle_unexpected_error(e):
 
         # log full stacktrace internally
         import traceback
+
         traceback.print_exc()
 
         return ApiResponse.error(
-            message="An unexpected error occurred",
-            status_code=500
+            message="An unexpected error occurred", status_code=500
         )
 
     @app.errorhandler(EmailDeliveryError)
     def handle_email_delivery_error(e):
 
-        return ApiResponse.error(
-            message="Failed to send email",
-            status_code=500
-        )
+        return ApiResponse.error(message="Failed to send email", status_code=500)
+
     @app.errorhandler(EmailConfigurationError)
     def handle_email_configuration_error(e):
 
         return ApiResponse.error(
-            message="Unable to send verification email,Try again later",
-            status_code=502
+            message="Unable to send email,Try again later", status_code=502
         )
