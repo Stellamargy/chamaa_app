@@ -6,29 +6,30 @@ from server.exceptions import (
     DatabaseError,
     EmailConfigurationError,
     EmailDeliveryError,
+    VerificationError,
 )
 from server.utilis.api_response import ApiResponse
 
 
 def register_error_handlers(app):
-
+    # Data validation
     @app.errorhandler(ValidationError)
     def handle_validation_error(e):
 
         return ApiResponse.error(
-            message="Validation failed", errors=e.messages, status_code=400
+            message="Input validation failed", errors=e.messages, status_code=400
         )
 
     @app.errorhandler(ConflictError)
     def handle_conflict_error(e):
 
         return ApiResponse.error(message=str(e), status_code=409)
-
+    #AuthenticationError
     @app.errorhandler(AuthenticationError)
     def handle_auth_error(e):
-
         return ApiResponse.error(message=str(e), status_code=401)
 
+    # Make database error message specific
     @app.errorhandler(DatabaseError)
     def handle_database_error(e):
 
@@ -57,3 +58,8 @@ def register_error_handlers(app):
         return ApiResponse.error(
             message="Unable to send email,Try again later", status_code=502
         )
+
+    @app.errorhandler(VerificationError)
+    def handle_verification_error(e):
+
+        return ApiResponse.error(message=str(e), status_code=400)

@@ -29,3 +29,9 @@ class EmailConfigurationError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
         self.message = message
+
+class VerificationError(Exception):
+    """Raised when verification fails """
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message

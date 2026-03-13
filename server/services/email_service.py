@@ -88,5 +88,6 @@ class EmailService:
                 "Email was only partially delivered — some recipients failed.",
                 failed_recipients=list(failed_recipients.keys()),
             )
+            
 
         return {"success": True, "failed_recipients": []}
