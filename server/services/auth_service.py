@@ -1,13 +1,12 @@
 from logging import getLogger
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from server.schema import user_schema, login_schema
-from server.exceptions import (
-    ConflictError,
-    AuthenticationError,
-    DatabaseError,
-    EmailDeliveryError,
-    EmailConfigurationError,
-)
+from server.exceptions.database import ResourceConflictError
+from server.exceptions.email import EmailDeliveryError
+from server.exceptions.auth import AuthenticationError
+from server.exceptions.database import ResourceNotFoundError
+from server.exceptions.auth import VerificationError
+from server.exceptions.auth import AuthorizationError
 
 logger = getLogger(__name__)
 
@@ -35,10 +34,11 @@ class AuthService:
             "verification_email_sent": email_sent,
         }
 
-    # Logs in (aauthenticate) user
+    # Logs in user
     def login_user(self, login_credentials):
-        # validates login credeentials
+        # validates login credeentials .
         valid_credentials = login_schema.load(login_credentials)
+        #get user using the provided email .
         user = self.user_repository.get_user_by_email(
             valid_credentials["email_address"]
         )
@@ -54,13 +54,17 @@ class AuthService:
         user = self.user_repository.get_user_by_id(user_id)
 
         if not user:
-            raise AuthenticationError("Invalid authentication credentials")
+            raise ResourceNotFoundError("Account not found.Please contact support")
         if not user.is_active:
-            raise AuthenticationError("Account deactivated")
+            raise AuthorizationError("Your account has been deactivated. Please contact support.")
         if user.is_verified:
-            raise ConflictError("User already verified")
+            raise VerificationError("Your email is already verified.")
 
-        return self._send_verification_email(user)
+        #Results to True or False 
+        email_sent=self._send_verification_email(user)
+        if not email_sent:
+            raise EmailDeliveryError("We couldn’t send the email. Please try again later.") from e
+        return email_sent
 
     # Verify email address
     def verify_email(self, token):
@@ -69,15 +73,18 @@ class AuthService:
         user = self.user_repository.get_user_by_id(user_id)
 
         if not user:
-            raise AuthenticationError("Invalid verification token")
+            raise ResourceNotFoundError("Account not found.Please contact support")
         if user.is_verified:
-            raise ConflictError("Email already verified")
+           raise VerificationError("Your email is already verified.")
 
         user.is_verified = True
-        self._commit(error_message="Failed to verify email")
+        self._commit(
+            error_message="Unable to verify email.Please request for a new verification link."
+            )
         return user
 
-    # Private helpers
+    # Private helpers methods 
+
     # Persist user to db  and create access token
     def _create_user(self, valid_user_data):
         try:
@@ -88,32 +95,36 @@ class AuthService:
 
         except IntegrityError as e:
             self.user_repository.db_session.rollback()
+            #Only works on postgress db (cons incase db change)-Future note
             error_message = str(e.orig)
             if "email_address" in error_message or "phone_number" in error_message:
-                raise ConflictError("Account already exists, kindly sign in.") from e
-            raise DatabaseError("A database constraint was violated") from e
-
+                raise ResourceConflictError("Account already exists, kindly sign in.") from e
+            raise DatabaseError("We couldn’t save your information. Please try again.") from e
         except SQLAlchemyError as e:
             self.user_repository.db_session.rollback()
-            raise DatabaseError("A database error occurred") from e
+            raise DatabaseError("We couldn’t save your information. Please try again.") from e
 
     # Send  verification email
     def _send_verification_email(self, user):
         try:
+            #Create email verification token 
             verify_token = self.jwt_service.create_email_verification_token(user.id)
-            html_body = self.email_service.generate_verification_email(
+            #Create email body
+            email_body = self.email_service.generate_verification_email(
                 user=user, verify_email_token=verify_token
             )
+            #send email verification email .
             result = self.email_service.send_email(
                 to=user.email_address,
                 subject="Verify your email address",
-                html_body=html_body,
+                html_body=email_body,
             )
             return result.get("success", False)
 
-        except (EmailDeliveryError, EmailConfigurationError) as e:
-            logger.error("Verification email failed for user %s: %s", user.id, e)
+        except EmailDeliveryError as e:
+            logger.error("Verification email failed for user ", user.id, exc_info=True)
             return False
+           
 
     def _commit(self, error_message="A database error occurred"):
         try:

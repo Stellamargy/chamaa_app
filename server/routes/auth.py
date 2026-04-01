@@ -8,12 +8,13 @@ auth_bp = Blueprint("auth", __name__)
 #User Registration
 @auth_bp.route("/sign_up", methods=["POST"])
 def sign_up():
-    user_input = request.get_json()
-    if not user_input:
-        return ApiResponse.error(message="No data provided", status_code=400)
+    #Get user registration data from request 
+    registration_input = request.get_json()
+    if not registration_input:
+        return ApiResponse.error(message="User registration data is required", status_code=400)
 
-    result = get_auth_service().register_user(user_input)
-    user = result["user"]
+    registration_result = get_auth_service().register_user(registration_input)
+    user = registration_result["user"]
 
     return ApiResponse.success(
         data={
@@ -21,8 +22,8 @@ def sign_up():
             "email_address": user.email_address,
             "first_name": user.first_name,
             "last_name": user.last_name,
-            "access_token": result["access_token"],
-            "email_sent": result["verification_email_sent"],
+            "access_token": registration_result["access_token"],
+            "email_sent": registration_result["verification_email_sent"],
         },
         message="User registered successfully",
         status_code=201,
@@ -33,7 +34,7 @@ def sign_up():
 def sign_in():
     login_input = request.get_json()
     if not login_input:
-        return ApiResponse.error(message="No data provided", status_code=400)
+        return ApiResponse.error(message="Login data is required", status_code=400)
 
     result = get_auth_service().login_user(login_input)
     user = result["user"]
@@ -56,9 +57,11 @@ def sign_in():
 def send_verification_email():
     user_id = int(get_jwt()["sub"])
     email_sent=get_auth_service().resend_verification_email(user_id)
+    
     return ApiResponse.success(
         data={"email_sent": email_sent},
-        message="If the email is valid, a verification link has been sent.",
+        message="Verification email sent.Check email inbox for verification link"
+    
     )
 
 
@@ -66,7 +69,7 @@ def send_verification_email():
 def verify_email():
     token = request.args.get("token")
     if not token:
-        return ApiResponse.error(message="Verification token required", status_code=400)
+        return ApiResponse.error(message="This verification link is invalid. Please request a new one.", status_code=400)
 
     get_auth_service().verify_email(token)
-    return ApiResponse.success(message="Email verified successfully")
+    return ApiResponse.success(message="Your email has been verified successfully.")

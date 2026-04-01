@@ -1,19 +1,21 @@
-import smtplib
+import smtplib 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import render_template
-from server.exceptions import EmailDeliveryError, EmailConfigurationError
+from server.exceptions.email import EmailDeliveryError
 
 
 class EmailService:
-
+    # pass verification link as an attribute(future code refactoring)
     def __init__(self, smtp_host, smtp_port, smtp_from_address, smtp_password):
         self.smtp_host = smtp_host
         self.smtp_port = smtp_port
         self.smtp_from_address = smtp_from_address
         self.smtp_password = smtp_password
 
+    #Creates email verification email 
     def generate_verification_email(self, user, verify_email_token):
+        #make this url dynamic -do not hard code it (future me note)
         verification_link = (
             f"http://127.0.0.1:5000/auth/verify_email?token={verify_email_token}"
         )
@@ -38,46 +40,15 @@ class EmailService:
             with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
                 server.starttls()
                 server.login(self.smtp_from_address, self.smtp_password)
-
                 failed_recipients = server.sendmail(
                     self.smtp_from_address, to, msg.as_string()
                 )
 
-        except smtplib.SMTPAuthenticationError as e:
-            # Wrong SMTP credentials
-            raise EmailConfigurationError(
-                "SMTP authentication failed. Check server credentials."
-            ) from e
-
-        except (smtplib.SMTPConnectError, smtplib.SMTPServerDisconnected) as e:
-            # Can't reach SMTP server
-            raise EmailConfigurationError(
-                f"Could not connect to SMTP server at {self.smtp_host}:{self.smtp_port}."
-            ) from e
-
-        except (
-            smtplib.SMTPSenderRefused,
-            smtplib.SMTPHeloError,
-            smtplib.SMTPNotSupportedError,
-        ) as e:
-            # Server rejected sender or handshake — configuration issue
-            raise EmailConfigurationError(
-                "SMTP configuration error. Check your server settings."
-            ) from e
-
-        except smtplib.SMTPRecipientsRefused as e:
-            # Server refused ALL recipients
-            refused = list(e.recipients.keys())
-
-            raise EmailDeliveryError(
-                "All recipients were refused by the SMTP server.",
-                failed_recipients=refused,
-            ) from e
 
         except smtplib.SMTPException as e:
-            # Catch-all for remaining SMTP issues
+
             raise EmailDeliveryError(
-                "Failed to send email.", failed_recipients=[to]
+                "We couldn’t send the email. Please try again later."
             ) from e
 
         # sendmail soft-fail:
@@ -85,9 +56,8 @@ class EmailService:
         # {addr: (code, msg)} -> failed recipients
         if failed_recipients:
             raise EmailDeliveryError(
-                "Email was only partially delivered — some recipients failed.",
-                failed_recipients=list(failed_recipients.keys()),
+                "We couldn’t send the email. Please try again later."
             )
             
 
-        return {"success": True, "failed_recipients": []}
+        return {"success": True}

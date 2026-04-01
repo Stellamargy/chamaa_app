@@ -1,6 +1,7 @@
 from server.models.user import User
  
 class UserRepository:
+
     def __init__(self, db_session):
         self.db_session = db_session
 
@@ -14,7 +15,7 @@ class UserRepository:
         return self.db_session.query(User).filter_by(
             id=user_id).first()
 
-    #create a user record (add user) 
+    #create a user record 
     def save_user(self, user_data):
         user_password = user_data.pop("password")
         user = User(**user_data)

@@ -1,6 +1,6 @@
 import jwt
 from jwt import ExpiredSignatureError
-from server.exceptions import VerificationError
+from server.exceptions.auth import VerificationError
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import create_access_token
 from flask import current_app
@@ -47,12 +47,12 @@ class JwtService:
             )
 
             if payload.get("type") != "email_verification":
-                raise VerificationError("Invalid token type")
+                raise VerificationError("This verification link is invalid. Please request a new one.")
 
             return payload
 
         except jwt.ExpiredSignatureError as e:
-            raise VerificationError("Verification link has expired") from e
+            raise VerificationError("This verification link has expired. Please request a new one.") from e
 
         except jwt.InvalidTokenError as e:
-            raise VerificationError("Invalid verification token") from e
+            raise VerificationError("This verification link is invalid. Please request a new one.") from e

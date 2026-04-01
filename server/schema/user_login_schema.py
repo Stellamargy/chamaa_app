@@ -6,7 +6,7 @@ class UserLoginSchema(Schema):
     # Login credentials(or fields to validate) are email_address and password
     email_address = fields.Email(required=True, allow_none=False)
     password = fields.String(
-        required=True, allow_none=False, validate=validate.Length(min=6)
+        required=True, allow_none=False
     )
 
     # Normalize email - lowercase, no trailing white spaces (important for handling uniqueness)
