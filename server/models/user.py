@@ -12,11 +12,14 @@ class User(BaseModel):
     # Targeted for Kenyan users
     phone_number: Mapped[str] = mapped_column(String(13), nullable=False, unique=True)
     _password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Improvements,this can be named into a more descriptive name 
+    # Email is the main thing getting verified .
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     #Relationships 
     chama_memberships = relationship("ChamaMember", back_populates="user", cascade="all, delete-orphan")
+    chamas=relationship("Chama",back_populates="user",cascade="all, delete-orphan")
 
     # getter for _password_hash (internal attribute)
     @property
