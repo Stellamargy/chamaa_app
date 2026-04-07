@@ -1,5 +1,5 @@
 from sqlalchemy import Integer, String, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column,relationship
 from server.models.basemodel import BaseModel
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -14,6 +14,9 @@ class User(BaseModel):
     _password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    #Relationships 
+    chama_memberships = relationship("ChamaMember", back_populates="user", cascade="all, delete-orphan")
 
     # getter for _password_hash (internal attribute)
     @property
