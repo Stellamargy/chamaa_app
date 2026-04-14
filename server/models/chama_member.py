@@ -20,10 +20,11 @@ class MemberRole(str, enum.Enum):
     The creator always retains the INVITE_MEMBERS override via is_creator=True,
     regardless of which role they chose.
     """
+
     CHAIRPERSON = "chairperson"
-    SECRETARY   = "secretary"
-    TREASURER   = "treasurer"
-    MEMBER      = "member"
+    SECRETARY = "secretary"
+    TREASURER = "treasurer"
+    MEMBER = "member"
 
 
 class MemberStatus(str, enum.Enum):
@@ -35,10 +36,11 @@ class MemberStatus(str, enum.Enum):
         LEFT     → user voluntarily exited the chama
         REMOVED  → user was removed by an authorised member
     """
-    PENDING  = "pending"
-    ACTIVE   = "active"
-    LEFT     = "left"
-    REMOVED  = "removed"
+
+    PENDING = "pending"
+    ACTIVE = "active"
+    LEFT = "left"
+    REMOVED = "removed"
 
 
 class ChamaMember(BaseModel):
@@ -50,6 +52,7 @@ class ChamaMember(BaseModel):
     A user can belong to many chamas, but can only have one
     membership record per chama (enforced by the unique constraint).
     """
+
     __tablename__ = "chama_members"
 
     user_id: Mapped[int] = mapped_column(
@@ -87,23 +90,17 @@ class ChamaMember(BaseModel):
 
     # Timestamp of when the user moved from PENDING → ACTIVE.
     # NULL until they accept the invite.
-    joined_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True
-    )
+    joined_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # --- Relationships ---
 
     user: Mapped["User"] = relationship(
         "User", foreign_keys=[user_id], back_populates="chama_memberships"
     )
-    chama: Mapped["Chama"] = relationship(
-        "Chama", back_populates="members"
-    )
+    chama: Mapped["Chama"] = relationship("Chama", back_populates="members")
 
     # The member who sent this invitation (nullable, no back_populates needed).
-    inviter: Mapped["User | None"] = relationship(
-        "User", foreign_keys=[invited_by]
-    )
+    inviter: Mapped["User | None"] = relationship("User", foreign_keys=[invited_by])
 
     # --- Constraints ---
 
@@ -112,4 +109,3 @@ class ChamaMember(BaseModel):
         # They can belong to many chamas, but not twice to the same one.
         UniqueConstraint("user_id", "chama_id", name="uq_user_chama_membership"),
     )
-   
