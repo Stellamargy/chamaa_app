@@ -20,7 +20,7 @@ class MemberRole(str, enum.Enum):
     The creator always retains the INVITE_MEMBERS override via is_creator=True,
     regardless of which role they chose.
     """
-
+    CHAMA_ADMIN="chama_admin"
     CHAIRPERSON = "chairperson"
     SECRETARY = "secretary"
     TREASURER = "treasurer"
@@ -74,23 +74,16 @@ class ChamaMember(BaseModel):
         Enum(MemberStatus), nullable=False, default=MemberStatus.PENDING
     )
 
-    # True only for the person who created the chama.
-    # This flag grants the creator the INVITE_MEMBERS override regardless
-    # of their chosen role — so a creator who picked MEMBER can still
-    # invite people during the early setup phase.
-    # Safer than checking chama.created_by because it survives ownership transfers.
-    is_creator: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # The member who sent this invite. NULL for the founding member
     # (they were never invited — they created the group).
-    # Self-referential: points back to another row in this same table.
     invited_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=True
     )
 
     # Timestamp of when the user moved from PENDING → ACTIVE.
     # NULL until they accept the invite.
-    joined_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    joined_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True,)
 
     # --- Relationships ---
 

@@ -25,8 +25,8 @@ class User(BaseModel):
 
     # True once the user confirms their email address.
     # Unverified users should have restricted access.
-    #TO DO : rename this to email_verified -it is more descriptive .
-    is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+   
+    email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # Soft-delete flag. Deactivated users cannot log in
     # but their data (contributions, memberships) is preserved.
@@ -37,7 +37,8 @@ class User(BaseModel):
     # All chama memberships this user holds (across all groups).
     # Deleting a user cascades to remove their membership records.
     chama_memberships: Mapped[list["ChamaMember"]] = relationship(
-        "ChamaMember", back_populates="user", cascade="all, delete-orphan"
+        "ChamaMember", back_populates="user", cascade="all, delete-orphan",
+        foreign_keys="ChamaMember.user_id"
     )
 
     # All chamas this user has founded.

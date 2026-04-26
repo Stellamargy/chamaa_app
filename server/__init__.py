@@ -21,7 +21,7 @@ def create_app():
     migrate.init_app(app=app,db=db) 
 
     #register bluerints 
-    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(auth_bp)
     app.register_blueprint(chama_bp)
     # register error handler
     register_error_handlers(app)

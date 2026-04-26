@@ -7,8 +7,10 @@ from server.exceptions.auth import AuthenticationError
 from server.exceptions.database import ResourceNotFoundError
 from server.exceptions.email import EmailDeliveryError
 from server.exceptions.auth import VerificationError
+from server.exceptions.base import AppError
+from logging import getLogger
 
-
+logger=getLogger(__name__)
 def register_error_handlers(app):
     # Data validation
     @app.errorhandler(ValidationError)
@@ -37,17 +39,13 @@ def register_error_handlers(app):
     def handle_database_error(e):
         logger.error("Database error occurred", exc_info=True)
         return ApiResponse.error(message=str(e), status_code=500)
-
-    @app.errorhandler(Exception)
+   
+    @app.errorhandler(AppError)
     def handle_unexpected_error(e):
 
-        # log full stacktrace internally
-        import traceback
-
-        traceback.print_exc()
-
+        logger.error("A server error occurred", exc_info=True)
         return ApiResponse.error(
-            message="An unexpected error occurred", status_code=500
+            message="An unexpected error occurred. Please try again later.", status_code=500
         )
 
     @app.errorhandler(EmailDeliveryError)
@@ -60,6 +58,6 @@ def register_error_handlers(app):
     @app.errorhandler(VerificationError)
     def handle_verification_error(e):
 
-        return ApiResponse.error(message=str(e), status_code=400)
+        return ApiResponse.error(message=str(e), status_code=403)
     
   

@@ -3,15 +3,18 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt
 from server.services.service_factory import get_auth_service
 
-auth_bp = Blueprint("auth", __name__)
+auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
-#User Registration
+
+# User Registration
 @auth_bp.route("/sign_up", methods=["POST"])
 def sign_up():
-    #Get user registration data from request 
+    # Get user registration data from request
     registration_input = request.get_json()
     if not registration_input:
-        return ApiResponse.error(message="User registration data is required", status_code=400)
+        return ApiResponse.error(
+            message="User registration data is required", status_code=400
+        )
 
     registration_result = get_auth_service().register_user(registration_input)
     user = registration_result["user"]
@@ -29,7 +32,8 @@ def sign_up():
         status_code=201,
     )
 
-#Handles user Login
+
+# Handles user Login
 @auth_bp.route("/sign_in", methods=["POST"])
 def sign_in():
     login_input = request.get_json()
@@ -51,17 +55,17 @@ def sign_in():
         status_code=200,
     )
 
-#Improvements -add api rate limiting
+
+# Improvements -add api rate limiting
 @auth_bp.route("/send_verification_email", methods=["POST"])
 @jwt_required()
 def send_verification_email():
     user_id = int(get_jwt()["sub"])
-    email_sent=get_auth_service().resend_verification_email(user_id)
-    
+    email_sent = get_auth_service().resend_verification_email(user_id)
+
     return ApiResponse.success(
         data={"email_sent": email_sent},
-        message="Verification email sent.Check email inbox for verification link"
-    
+        message="Verification email sent.Check email inbox for verification link",
     )
 
 
@@ -69,7 +73,16 @@ def send_verification_email():
 def verify_email():
     token = request.args.get("token")
     if not token:
-        return ApiResponse.error(message="This verification link is invalid. Please request a new one.", status_code=400)
-
-    get_auth_service().verify_email(token)
-    return ApiResponse.success(message="Your email has been verified successfully.")
+        return ApiResponse.error(
+            message="This verification link is invalid. Please request a new one.",
+            status_code=400,
+        )
+    # This has to return an access token because email is being verified .(STALE ACCESS TOKEN)
+    verify_results = get_auth_service().verify_email(token)
+    return ApiResponse.success(
+        message="Your email has been verified successfully.",
+        data={
+            "user_id": verify_results["user"].id,
+            "access_token": verify_results["access_token"],
+        },
+    )

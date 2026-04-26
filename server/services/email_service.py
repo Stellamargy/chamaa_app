@@ -50,6 +50,8 @@ class EmailService:
             raise EmailDeliveryError(
                 "We couldn’t send the email. Please try again later."
             ) from e
+        except Exception as e:
+            raise EmailDeliveryError("We couldn’t send the email. Please try again later.") from e
 
         # sendmail soft-fail:
         # {} -> success
@@ -57,7 +59,9 @@ class EmailService:
         if failed_recipients:
             raise EmailDeliveryError(
                 "We couldn’t send the email. Please try again later."
-            )
+            ) 
+        
+        
             
 
         return {"success": True}

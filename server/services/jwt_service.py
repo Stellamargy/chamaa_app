@@ -13,7 +13,7 @@ class JwtService:
         return create_access_token(
                 identity=str(user.id),
                 additional_claims={
-                    "email_verified": user.is_verified,
+                    "email_verified": user.email_verified,
                     "user_active": user.is_active,
                 },
             )

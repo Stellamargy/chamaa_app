@@ -7,22 +7,6 @@ class CreateChamaSchema(Schema):
     Validates the POST /chamas request body.
     The creator's role is required — nothing is auto-assigned.
     """
-
-    @pre_load
-    def normalize(self, data, **kwargs):
-        # Normalize name
-        if "name" in data and data["name"] is not None:
-            data["name"] = data["name"].strip()
-
-        # Normalize description
-        if "description" in data:
-            desc = data["description"]
-            if desc is not None:
-                desc = desc.strip()
-                data["description"] = desc if desc else None  # "" → None
-
-        return data
-
     name = fields.String(
         required=True,
         allow_none=False,
@@ -34,13 +18,23 @@ class CreateChamaSchema(Schema):
         load_default=None,
         validate=validate.Length(max=200)
     )
+    @pre_load
+    def normalize(self, data, **kwargs):
+        # Normalize name
+        if "name" in data and data["name"] is not None:
+            data["name"] = data["name"].strip()
 
-    #creator role .
-    role=fields.Enum(
-        MemberRole,
-        required=True,
-        allow_none=False,
-        by_value=True
-    )
+        # Normalize description
+        if "description" in data:
+            desc = data["description"]
+            if desc is not None and isinstance(desc,str):
+                desc = desc.strip()
+                data["description"] = desc if desc else None  # "" → None
+
+        return data
+
+   
+
+   
 
 

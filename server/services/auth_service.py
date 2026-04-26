@@ -4,7 +4,7 @@ from server.schema import user_schema, login_schema
 from server.exceptions.database import ResourceConflictError
 from server.exceptions.email import EmailDeliveryError
 from server.exceptions.auth import AuthenticationError
-from server.exceptions.database import ResourceNotFoundError
+from server.exceptions.database import ResourceNotFoundError ,DatabaseError
 from server.exceptions.auth import VerificationError
 from server.exceptions.auth import AuthorizationError
 
@@ -13,18 +13,20 @@ logger = getLogger(__name__)
 
 class AuthService:
 
-    def __init__(self, user_repository, email_service, jwt_service):
+    def __init__(self, user_repository, email_service, jwt_service,db_session):
         self.user_repository = user_repository
         self.email_service = email_service
         self.jwt_service = jwt_service
+        self.db_session=db_session
 
     # Public methods
 
     # Register a user
     def register_user(self, user_data):
-        # validate user registration  data
+        #1. validate user registration  data
+        #
         valid_user_data = user_schema.load(user_data)
-        # Create user record and access token
+        #2 .Create user record and access token
         user, access_token = self._create_user(valid_user_data)
         # Send verification email
         email_sent = self._send_verification_email(user)
@@ -44,12 +46,13 @@ class AuthService:
         )
         # Check credentials
         if not user or not user.check_password(valid_credentials["password"]):
-            raise AuthenticationError("Invalid email address or password")
+            raise AuthenticationError("Failed to authenticate .Please try again")
         # Generate access tokens
         access_token = self.jwt_service.generate_access_token(user)
         return {"user": user, "access_token": access_token}
 
     # Send email verification
+    #This is supposed to be send_verification email
     def resend_verification_email(self, user_id):
         user = self.user_repository.get_user_by_id(user_id)
 
@@ -57,7 +60,7 @@ class AuthService:
             raise ResourceNotFoundError("Account not found.Please contact support")
         if not user.is_active:
             raise AuthorizationError("Your account has been deactivated. Please contact support.")
-        if user.is_verified:
+        if user.email_verified:
             raise VerificationError("Your email is already verified.")
 
         #Results to True or False 
@@ -73,15 +76,28 @@ class AuthService:
         user = self.user_repository.get_user_by_id(user_id)
 
         if not user:
-            raise ResourceNotFoundError("Account not found.Please contact support")
-        if user.is_verified:
+            raise AuthenticationError("Authentication failed")
+        if user.email_verified:
            raise VerificationError("Your email is already verified.")
 
-        user.is_verified = True
-        self._commit(
-            error_message="Unable to verify email.Please request for a new verification link."
-            )
-        return user
+        try:
+             user.email_verified=True
+             #generate new access token-prevent stale token
+             access_token=self.jwt_service.generate_access_token(user=user)
+             self.db_session.commit()
+             
+             return {
+                "user":user,
+                "access_token":access_token
+             }
+        except SQLAlchemyError as e:
+            self.db_session.rollback()
+            raise DatabaseError("Failed to verify email try again later") from e
+        # self._commit(
+        #     error_message="Unable to verify email.Please request for a new verification link."
+        #     )
+         #This has to return an access token because email is being verified .(STALE ACCESS TOKEN)   
+        
 
     # Private helpers methods 
 

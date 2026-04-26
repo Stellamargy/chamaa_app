@@ -44,6 +44,8 @@ class Chama(BaseModel):
     # Tracks the chama's lifecycle. Defaults to ACTIVE on creation.
     # Use this for soft deletes (INACTIVE) and subscription enforcement (SUSPENDED).
     # Never hard-delete a chama — financial history must be preserved.
+
+    #Should I store status as a string in db ? But how will it check that is one of the Enum 
     status: Mapped[ChamaStatus] = mapped_column(
         Enum(ChamaStatus), nullable=False, default=ChamaStatus.ACTIVE
     )
